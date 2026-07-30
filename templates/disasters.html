@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Disaster Alerts & Warnings - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+        <!-- Title Header -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h4 class="fw-bold mb-0"><i class="bi bi-tsunami text-warning me-2"></i> Active Disaster Warnings</h4>
+                <p class="text-muted small mb-0">Verified alerts issued by City Authorities</p>
+            </div>
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+                {{ disasters|length }} Active
+            </span>
+        </div>
+
+        <!-- Leaflet Map for Disasters -->
+        <div id="disasters-map" class="leaflet-map-container mb-4"></div>
+
+        <!-- Warnings List -->
+        {% if disasters %}
+            <div class="d-flex flex-column gap-3 mb-5">
+            {% for d in disasters %}
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden border-start border-4 {% if d.severity == 'Critical' %}border-danger{% elif d.severity == 'High' %}border-warning{% else %}border-info{% endif %}">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge 
+                                    {% if d.severity == 'Critical' %}badge-critical
+                                    {% elif d.severity == 'High' %}badge-high
+                                    {% elif d.severity == 'Medium' %}badge-medium
+                                    {% else %}badge-low{% endif %} px-2 py-1 rounded-pill mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ d.severity|upper }} SEVERITY
+                                </span>
+                                <h5 class="fw-bold text-dark mb-1">{{ d.title }}</h5>
+                                <p class="text-primary fw-semibold small mb-0"><i class="bi bi-geo-alt-fill me-1"></i> Area: {{ d.area }}</p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-dark border me-1">{{ d.disaster_type }}</span>
+                                <small class="text-muted d-block mt-1" style="font-size:0.75rem;">{{ d.created_at.strftime("%I:%M %p, %b %d") }}</small>
+                            </div>
+                        </div>
+
+                        <p class="text-secondary small mb-3">{{ d.description }}</p>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small"><i class="bi bi-shield-check text-success me-1"></i> Verified Official Alert</span>
+                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="focusOnMap({{ d.latitude }}, {{ d.longitude }}, 'disasters-map')">
+                                <i class="bi bi-map-fill me-1"></i> VIEW ON MAP
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center mb-5">
+                <i class="bi bi-shield-check text-success display-4 mb-2"></i>
+                <h5 class="fw-bold">No Active Disaster Warnings</h5>
+                <p class="text-muted small mb-0">All city areas are currently clear of critical disaster advisories.</p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const userLoc = await window.SmartLocation.getCurrentPosition();
+    const map = initLeafletMap('disasters-map', userLoc.latitude, userLoc.longitude, 12);
+
+    // Fetch and place disaster markers
+    try {
+        const res = await fetch("/api/disasters");
+        const disasters = await res.json();
+
+        disasters.forEach(d => {
+            if (!d.is_active) return;
+            let iconColor = "#f59e0b"; // yellow
+            if (d.severity === "High") iconColor = "#f97316";
+            if (d.severity === "Critical") iconColor = "#ef4444";
+
+            const marker = L.marker([d.latitude, d.longitude], {
+                icon: createCustomIcon(iconColor, "bi-tsunami")
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div>
+                    <span class="badge bg-danger mb-1">${d.severity} ${d.disaster_type}</span>
+                    <h6 class="fw-bold mb-1">${d.title}</h6>
+                    <p class="small mb-1">${d.area}</p>
+                    <small class="text-muted">${d.description}</small>
+                </div>
+            `);
+        });
+    } catch (e) {
+        console.error(e);
+    }
+});
+</script>
+{% endblock %}

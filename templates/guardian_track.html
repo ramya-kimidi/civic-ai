@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Tracking Journey - {{ journey.traveller_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+        <!-- Status Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="badge bg-purple text-white px-3 py-1 rounded-pill mb-1" style="background-color: #8b5cf6;">
+                            <i class="bi bi-shield-check me-1"></i> GUARDIAN LIVE TRACKER
+                        </span>
+                        <h4 class="fw-bold mb-0">{{ journey.traveller_name }}'s Journey</h4>
+                    </div>
+                    <div>
+                        {% if journey.status == 'Active' %}
+                            <span class="badge bg-success px-3 py-2 rounded-pill fs-6 animate-pulse">
+                                <i class="bi bi-broadcast me-1"></i> Active Trip
+                            </span>
+                        {% elif journey.status == 'Completed' %}
+                            <span class="badge bg-primary px-3 py-2 rounded-pill fs-6">
+                                <i class="bi bi-check-circle-fill me-1"></i> Reached Safely
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2 rounded-pill fs-6">{{ journey.status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-3 text-muted opacity-25">
+
+                <div class="row g-3">
+                    <div class="col-6 col-sm-3">
+                        <small class="text-muted d-block">Guardian</small>
+                        <strong class="text-dark">{{ journey.guardian_name }}</strong>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <small class="text-muted d-block">Destination</small>
+                        <strong class="text-dark">{{ journey.destination }}</strong>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <small class="text-muted d-block">Expected Arrival</small>
+                        <strong class="text-dark">{{ journey.expected_arrival }}</strong>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <small class="text-muted d-block">Last Heartbeat</small>
+                        <strong id="live-time" class="text-primary">{{ journey.updated_at.strftime("%I:%M:%S %p") if journey.updated_at else 'Just now' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaflet Tracking Map -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0"><i class="bi bi-map-fill text-primary me-1"></i> Live Traveller GPS Map</h6>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="refreshGuardianData()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Location
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div id="guardian-map" class="leaflet-map-container" style="border-radius: 0; border: none; height: 420px;"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let trackMap = null;
+let trackMarker = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const defaultLat = {{ journey.current_lat or 28.6139 }};
+    const defaultLng = {{ journey.current_lng or 77.2090 }};
+
+    trackMap = initLeafletMap('guardian-map', defaultLat, defaultLng, 15);
+
+    trackMarker = L.marker([defaultLat, defaultLng], {
+        icon: createCustomIcon("#8b5cf6", "bi-person-walking")
+    }).addTo(trackMap).bindPopup("<b>{{ journey.traveller_name }}</b><br>Current Location").openPopup();
+
+    // Auto-poll location every 10s if active
+    {% if journey.status == 'Active' %}
+    setInterval(refreshGuardianData, 10000);
+    {% endif %}
+});
+
+async function refreshGuardianData() {
+    try {
+        const res = await fetch("/api/journey/track/{{ journey.tracking_code }}");
+        const data = await res.json();
+
+        if (data.current_lat && data.current_lng) {
+            trackMarker.setLatLng([data.current_lat, data.current_lng]);
+            trackMap.panTo([data.current_lat, data.current_lng]);
+            document.getElementById('live-time').innerText = data.updated_at;
+        }
+    } catch (e) {
+        console.error("Polling error:", e);
+    }
+}
+</script>
+{% endblock %}

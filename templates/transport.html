@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Transport - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+
+        <!-- Title Header -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4 text-center">
+                <div class="icon-box bg-icon-blue mx-auto mb-2">
+                    <i class="bi bi-ambulance fs-2"></i>
+                </div>
+                <h4 class="fw-bold">Emergency Transport Assistance</h4>
+                <p class="text-muted small mb-0">Select required service to request immediate dispatched transport.</p>
+            </div>
+        </div>
+
+        <!-- Request Form Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-1-circle-fill text-primary me-1"></i> Select Transport Service</h6>
+
+                <!-- Service Grid Selector -->
+                <div class="row g-2 mb-4" id="service-options">
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="transport_type" id="srv-ambulance" value="Ambulance" checked>
+                        <label class="btn btn-outline-danger w-100 p-3 rounded-3 text-start h-100" for="srv-ambulance">
+                            <i class="bi bi-hospital fs-3 d-block mb-1"></i>
+                            <strong class="d-block">Medical</strong>
+                            <small class="text-muted">Ambulance Unit</small>
+                        </label>
+                    </div>
+
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="transport_type" id="srv-fire" value="Fire">
+                        <label class="btn btn-outline-warning w-100 p-3 rounded-3 text-start h-100" for="srv-fire">
+                            <i class="bi bi-fire fs-3 d-block mb-1"></i>
+                            <strong class="d-block">Fire Service</strong>
+                            <small class="text-muted">Rescue Engine</small>
+                        </label>
+                    </div>
+
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="transport_type" id="srv-police" value="Police">
+                        <label class="btn btn-outline-primary w-100 p-3 rounded-3 text-start h-100" for="srv-police">
+                            <i class="bi bi-shield-shaded fs-3 d-block mb-1"></i>
+                            <strong class="d-block">Police Response</strong>
+                            <small class="text-muted">Patrol Cruiser</small>
+                        </label>
+                    </div>
+
+                    <div class="col-6">
+                        <input type="radio" class="btn-check" name="transport_type" id="srv-rescue" value="Rescue">
+                        <label class="btn btn-outline-success w-100 p-3 rounded-3 text-start h-100" for="srv-rescue">
+                            <i class="bi bi-life-preserver fs-3 d-block mb-1"></i>
+                            <strong class="d-block">Disaster Rescue</strong>
+                            <small class="text-muted">Flood/Evac Team</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Optional Details / Landmarks</label>
+                    <textarea id="transport-desc" class="form-control bg-light" rows="2" placeholder="e.g. Near West Gate entrance, patient experiencing severe breathlessness."></textarea>
+                </div>
+
+                <button id="dispatch-transport-btn" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm">
+                    <i class="bi bi-send-fill me-1"></i> REQUEST EMERGENCY TRANSPORT
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Result Container -->
+        <div id="transport-result" class="mb-4"></div>
+
+        <!-- Citizen Active Request Status Tracker -->
+        <div class="card border-0 shadow-sm rounded-4 mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-1 text-primary"></i> Request Status Tracker</h6>
+                    <button class="btn btn-sm btn-light rounded-circle" onclick="loadMyRequests()"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+                <div id="active-requests-list">
+                    <div class="text-center p-3 text-muted small">Loading active requests...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('dispatch-transport-btn')?.addEventListener('click', async () => {
+    const selectedType = document.querySelector('input[name="transport_type"]:checked')?.value || 'Ambulance';
+    const desc = document.getElementById('transport-desc')?.value || '';
+    const resDiv = document.getElementById('transport-result');
+
+    resDiv.innerHTML = `
+        <div class="alert alert-info d-flex align-items-center rounded-3">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Capturing GPS location and dispatching request...
+        </div>
+    `;
+
+    const loc = await window.SmartLocation.getCurrentPosition();
+
+    try {
+        const response = await fetch('/api/emergency-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                request_type: selectedType,
+                description: desc,
+                latitude: loc.latitude,
+                longitude: loc.longitude
+            })
+        });
+
+        const data = await response.json();
+
+        resDiv.innerHTML = `
+            <div class="alert alert-success rounded-4 shadow-sm p-3">
+                <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-1"></i> Request Sent!</h6>
+                <p class="mb-0 small">${data.message}</p>
+                <small class="text-muted d-block mt-1">Status: <span class="badge bg-warning text-dark">${data.current_status}</span></small>
+            </div>
+        `;
+        loadMyRequests();
+    } catch (err) {
+        resDiv.innerHTML = `<div class="alert alert-danger">Error submitting transport request. Please retry.</div>`;
+    }
+});
+
+async function loadMyRequests() {
+    const container = document.getElementById('active-requests-list');
+    try {
+        const res = await fetch('/api/emergency-requests');
+        const reqs = await res.json();
+
+        if (reqs.length === 0) {
+            container.innerHTML = `<p class="text-muted small text-center mb-0">No active transport requests found.</p>`;
+            return;
+        }
+
+        let html = '';
+        reqs.slice(0, 5).forEach(r => {
+            let badgeClass = "bg-warning text-dark";
+            if (r.status === "Accepted") badgeClass = "bg-info text-white";
+            if (r.status === "On The Way") badgeClass = "bg-primary";
+            if (r.status === "Resolved") badgeClass = "bg-success";
+
+            html += `
+                <div class="p-3 bg-light rounded-3 mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="d-block text-dark">${r.request_type} Transport</strong>
+                        <small class="text-muted">${r.description || 'No additional details'}</small>
+                        <small class="d-block text-secondary" style="font-size:0.75rem;">Time: ${r.created_at}</small>
+                    </div>
+                    <span class="badge ${badgeClass} px-3 py-2 rounded-pill">${r.status}</span>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = `<p class="text-muted small mb-0">Error loading status.</p>`;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadMyRequests);
+</script>
+{% endblock %}

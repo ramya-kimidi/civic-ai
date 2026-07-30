@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Alerts - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10">
+
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h4 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> All Active Emergency Alerts</h4>
+                <p class="text-muted small mb-0">List of SOS and Accident Detection dispatches in SQLite database</p>
+            </div>
+            <a href="/emergency-admin/dashboard" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-headset me-1"></i> Admin Command Hub
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Type</th>
+                                <th>Citizen</th>
+                                <th>Address / GPS</th>
+                                <th>Notes</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in alerts %}
+                            <tr>
+                                <td class="ps-3">
+                                    <span class="badge {% if a.alert_type == 'SOS' %}bg-danger{% else %}bg-warning text-dark{% endif %} px-3 py-1 rounded-pill">
+                                        {{ a.alert_type }} #{{ a.id }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong class="d-block">{{ a.user.full_name if a.user else 'Anonymous' }}</strong>
+                                    <small class="text-muted">{{ a.user.phone if a.user else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <small class="d-block text-dark">{{ a.address }}</small>
+                                    <small class="text-muted">Lat: {{ a.latitude|round(4) }}, Lng: {{ a.longitude|round(4) }}</small>
+                                </td>
+                                <td><small class="text-secondary">{{ a.notes or 'No details' }}</small></td>
+                                <td><small class="text-muted">{{ a.created_at.strftime("%I:%M %p, %b %d") }}</small></td>
+                                <td>
+                                    <span class="badge {% if a.status == 'Pending' %}bg-warning text-dark{% elif a.status == 'Accepted' %}bg-info text-white{% elif a.status == 'Responding' %}bg-primary{% else %}bg-success{% endif %}">
+                                        {{ a.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not alerts %}
+                            <tr>
+                                <td colspan="6" class="text-center p-4 text-muted">No emergency alerts recorded yet.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

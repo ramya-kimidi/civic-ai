@@ -1,0 +1,181 @@
+/* SmartCivic Mobile-First Stylesheet */
+
+:root {
+  --primary-blue: #1e3a8a;
+  --accent-red: #dc2626;
+  --danger-hover: #b91c1c;
+  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  min-height: 100vh;
+  padding-bottom: 70px; /* Space for mobile bottom bar */
+}
+
+/* Mobile Header */
+.app-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  color: white;
+  padding: 1rem 1.25rem;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.brand-badge {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Feature Cards */
+.feature-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: all 0.25s ease;
+  box-shadow: var(--card-shadow);
+  text-decoration: none !important;
+  color: inherit;
+  display: block;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-hover-shadow);
+  border-color: #cbd5e1;
+}
+
+.icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Color Themes for Icons */
+.bg-icon-red { background: #fee2e2; color: #dc2626; }
+.bg-icon-blue { background: #dbeafe; color: #2563eb; }
+.bg-icon-amber { background: #fef3c7; color: #d97706; }
+.bg-icon-emerald { background: #d1fae5; color: #059669; }
+.bg-icon-purple { background: #f3e8ff; color: #9333ea; }
+
+/* Giant Red SOS Button */
+.sos-btn-wrapper {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.sos-btn {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: white;
+  border: 4px solid #fecaca;
+  font-size: 1.75rem;
+  font-weight: 800;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+  animation: pulse-ring 2s infinite;
+  transition: transform 0.15s ease;
+}
+
+.sos-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Bottom Navigation Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 0.725rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-item-link.active, .nav-item-link:hover {
+  color: #2563eb;
+}
+
+.nav-item-link i {
+  font-size: 1.25rem;
+  margin-bottom: 2px;
+}
+
+/* Map Containers */
+.leaflet-map-container {
+  height: 380px;
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid #cbd5e1;
+  box-shadow: var(--card-shadow);
+  z-index: 1;
+}
+
+/* Severity Badges */
+.badge-low { background: #e0f2fe; color: #0369a1; }
+.badge-medium { background: #fef3c7; color: #b45309; }
+.badge-high { background: #ffedd5; color: #c2410c; }
+.badge-critical { background: #fee2e2; color: #b91c1c; font-weight: bold; }
+
+/* Pulsing SOS Alert Indicator for Admin */
+.alert-row-pending {
+  border-left: 5px solid #ef4444;
+  background-color: #fef2f2;
+}
+
+/* Modal Overlay styling */
+.modal-content {
+  border-radius: 1.25rem;
+  border: none;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}

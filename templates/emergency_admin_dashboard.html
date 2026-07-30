@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Dispatch Dashboard - SmartCivic{% endblock %}
+
+{% block content %}
+<!-- Top Header Banner -->
+<div class="card border-0 shadow-sm rounded-4 bg-gradient bg-dark text-white p-3 p-md-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <span class="badge bg-danger px-3 py-1 rounded-pill mb-2 fw-bold"><i class="bi bi-headset me-1"></i> EMERGENCY RESPONSE CONTROL CENTER</span>
+            <h4 class="fw-bold mb-1">Dispatch & Incident Command</h4>
+            <p class="text-white-50 small mb-0">Live monitoring of SOS, Accident, and Transport requests</p>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="refreshDashboardData()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Auto-Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- STATS OVERVIEW CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
+            <small class="text-muted fw-semibold d-block mb-1">Total Incidents</small>
+            <h3 class="fw-bold text-dark mb-0" id="stat-total">--</h3>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
+            <small class="text-muted fw-semibold d-block mb-1">Pending Emergency</small>
+            <h3 class="fw-bold text-danger mb-0" id="stat-pending">--</h3>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
+            <small class="text-muted fw-semibold d-block mb-1">Transport Reqs</small>
+            <h3 class="fw-bold text-warning mb-0" id="stat-transport">--</h3>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
+            <small class="text-muted fw-semibold d-block mb-1">Resolved Cases</small>
+            <h3 class="fw-bold text-success mb-0" id="stat-resolved">--</h3>
+        </div>
+    </div>
+</div>
+
+<!-- LEAFLET INCIDENT MAP -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-map-fill text-danger me-1"></i> Incident Command Map</h6>
+        <small class="text-muted">Red = Pending SOS | Orange = Accident | Blue = Transport</small>
+    </div>
+    <div class="card-body p-0">
+        <div id="admin-map" class="leaflet-map-container" style="border-radius: 0; border: none; height: 380px;"></div>
+    </div>
+</div>
+
+<!-- TWO TABS: ALERTS & TRANSPORT REQUESTS -->
+<div class="card border-0 shadow-sm rounded-4 mb-5">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <ul class="nav nav-pills card-header-pills" id="admin-tabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill fw-bold" id="sos-tab" data-bs-toggle="tab" data-bs-target="#sos-pane">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> SOS & Accident Alerts
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill fw-bold" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport-pane">
+                    <i class="bi bi-ambulance text-primary me-1"></i> Transport Requests
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card-body p-4">
+        <div class="tab-content">
+            
+            <!-- SOS & Accident Pane -->
+            <div class="tab-pane fade show active" id="sos-pane">
+                <div id="alerts-cards-container" class="row g-3">
+                    <div class="text-center p-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2"></div> Loading incoming alerts...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transport Pane -->
+            <div class="tab-pane fade" id="transport-pane">
+                <div id="transport-cards-container" class="row g-3">
+                    <div class="text-center p-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2"></div> Loading transport requests...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let adminMap = null;
+let incidentMarkers = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+    adminMap = initLeafletMap('admin-map', 28.6139, 77.2090, 12);
+    refreshDashboardData();
+
+    // Auto refresh every 8 seconds
+    setInterval(refreshDashboardData, 8000);
+});
+
+async function refreshDashboardData() {
+    // 1. Fetch stats
+    try {
+        const statsRes = await fetch("/api/admin/stats");
+        const stats = await statsRes.json();
+        document.getElementById('stat-total').innerText = stats.total_alerts + stats.total_transport_reqs;
+        document.getElementById('stat-pending').innerText = stats.pending_alerts;
+        document.getElementById('stat-transport').innerText = stats.pending_transport_reqs;
+        document.getElementById('stat-resolved').innerText = stats.resolved_cases;
+    } catch (e) { console.error(e); }
+
+    // Clear old map markers
+    incidentMarkers.forEach(m => adminMap.removeLayer(m));
+    incidentMarkers = [];
+
+    // 2. Fetch & Render SOS/Accident Alerts
+    try {
+        const res = await fetch("/api/alerts");
+        const alerts = await res.json();
+        renderAlertsCards(alerts);
+    } catch (e) { console.error(e); }
+
+    // 3. Fetch & Render Transport Requests
+    try {
+        const res = await fetch("/api/emergency-requests");
+        const reqs = await res.json();
+        renderTransportCards(reqs);
+    } catch (e) { console.error(e); }
+}
+
+function renderAlertsCards(alerts) {
+    const container = document.getElementById("alerts-cards-container");
+    if (!container) return;
+
+    if (alerts.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-muted">No active SOS or Accident alerts.</div>`;
+        return;
+    }
+
+    let html = "";
+    alerts.forEach(a => {
+        const isSOS = a.alert_type === "SOS";
+        const icon = isSOS ? "bi-exclamation-triangle-fill" : "bi-car-front-fill";
+        const color = isSOS ? "#ef4444" : "#f97316";
+
+        // Add map marker
+        const marker = L.marker([a.latitude, a.longitude], {
+            icon: createCustomIcon(color, icon)
+        }).addTo(adminMap).bindPopup(`
+            <div>
+                <strong class="${isSOS ? 'text-danger':'text-warning'}">${a.alert_type} ALERT #${a.id}</strong>
+                <p class="mb-0 small">Citizen: ${a.user_name}</p>
+                <small class="text-muted">Status: ${a.status}</small>
+            </div>
+        `);
+        incidentMarkers.push(marker);
+
+        let statusBadge = `bg-warning text-dark`;
+        if (a.status === "Accepted") statusBadge = `bg-info text-white`;
+        if (a.status === "Responding") statusBadge = `bg-primary`;
+        if (a.status === "Resolved") statusBadge = `bg-success`;
+
+        html += `
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 ${a.status === 'Pending' ? 'alert-row-pending':''} p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge ${isSOS ? 'bg-danger':'bg-warning text-dark'} px-3 py-1 rounded-pill">
+                            <i class="bi ${icon} me-1"></i> ${a.alert_type} #${a.id}
+                        </span>
+                        <span class="badge ${statusBadge}">${a.status}</span>
+                    </div>
+
+                    <h6 class="fw-bold mb-1">${a.user_name}</h6>
+                    <small class="text-muted d-block mb-2">📞 ${a.user_phone} | ⏰ ${a.created_at}</small>
+                    
+                    <p class="text-secondary small mb-2 bg-light p-2 rounded-3"><i class="bi bi-info-circle me-1"></i> ${a.notes || 'No extra notes'}</p>
+                    <small class="text-muted d-block mb-3">📍 GPS: ${a.latitude.toFixed(4)}, ${a.longitude.toFixed(4)}</small>
+
+                    <div class="d-flex flex-wrap gap-1">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="focusOnMap(${a.latitude}, ${a.longitude}, 'admin-map')">
+                            <i class="bi bi-map me-1"></i> Map
+                        </button>
+                        <button class="btn btn-sm btn-info text-white rounded-pill" onclick="updateAlertStatus(${a.id}, 'Accepted')">Accept</button>
+                        <button class="btn btn-sm btn-primary rounded-pill" onclick="updateAlertStatus(${a.id}, 'Responding')">Responding</button>
+                        <button class="btn btn-sm btn-success rounded-pill" onclick="updateAlertStatus(${a.id}, 'Resolved')">Resolve</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function renderTransportCards(reqs) {
+    const container = document.getElementById("transport-cards-container");
+    if (!container) return;
+
+    if (reqs.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-muted">No transport requests currently pending.</div>`;
+        return;
+    }
+
+    let html = "";
+    reqs.forEach(r => {
+        // Add map marker
+        const marker = L.marker([r.latitude, r.longitude], {
+            icon: createCustomIcon("#2563eb", "bi-ambulance")
+        }).addTo(adminMap).bindPopup(`<b>${r.request_type} Request #${r.id}</b><br>${r.user_name}`);
+        incidentMarkers.push(marker);
+
+        let statusBadge = `bg-warning text-dark`;
+        if (r.status === "Accepted") statusBadge = `bg-info text-white`;
+        if (r.status === "On The Way") statusBadge = `bg-primary`;
+        if (r.status === "Resolved") statusBadge = `bg-success`;
+
+        html += `
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-primary px-3 py-1 rounded-pill">
+                            <i class="bi bi-ambulance me-1"></i> ${r.request_type} Request
+                        </span>
+                        <span class="badge ${statusBadge}">${r.status}</span>
+                    </div>
+
+                    <h6 class="fw-bold mb-1">${r.user_name}</h6>
+                    <small class="text-muted d-block mb-2">📞 ${r.user_phone} | ⏰ ${r.created_at}</small>
+                    
+                    <p class="text-secondary small mb-2 bg-light p-2 rounded-3">${r.description || 'No additional details provided'}</p>
+                    <small class="text-muted d-block mb-3">📍 GPS: ${r.latitude.toFixed(4)}, ${r.longitude.toFixed(4)}</small>
+
+                    <div class="d-flex flex-wrap gap-1">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="focusOnMap(${r.latitude}, ${r.longitude}, 'admin-map')">
+                            <i class="bi bi-map me-1"></i> Map
+                        </button>
+                        <button class="btn btn-sm btn-info text-white rounded-pill" onclick="updateTransportStatus(${r.id}, 'Accepted')">Accept</button>
+                        <button class="btn btn-sm btn-primary rounded-pill" onclick="updateTransportStatus(${r.id}, 'On The Way')">On The Way</button>
+                        <button class="btn btn-sm btn-success rounded-pill" onclick="updateTransportStatus(${r.id}, 'Resolved')">Resolve</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+async function updateAlertStatus(id, newStatus) {
+    await fetch(`/api/alerts/${id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+    });
+    refreshDashboardData();
+}
+
+async function updateTransportStatus(id, newStatus) {
+    await fetch(`/api/emergency-requests/${id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+    });
+    refreshDashboardData();
+}
+</script>
+{% endblock %}

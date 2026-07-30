@@ -1,0 +1,6 @@
+{
+  "name": "SmartCivic",
+  "description": "Smart Urban Safety & Emergency Assistance Platform",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

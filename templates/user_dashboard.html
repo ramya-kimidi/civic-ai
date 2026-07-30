@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Citizen Dashboard - SmartCivic{% endblock %}
+
+{% block content %}
+<!-- Welcome & Status Banner -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-gradient text-dark position-relative overflow-hidden" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <div class="card-body p-3 p-md-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <span class="badge bg-primary text-white rounded-pill px-3 py-1 mb-2">
+                    <i class="bi bi-shield-check me-1"></i> Active Citizen Protection
+                </span>
+                <h4 class="fw-bold mb-1">Hello, {{ user.full_name if user else 'Citizen' }} 👋</h4>
+                <p class="text-secondary small mb-0">Smart Urban Safety & Assistance Services</p>
+            </div>
+            <div class="d-none d-sm-block text-end">
+                <span class="badge bg-white text-success border shadow-sm p-2 rounded-3">
+                    <i class="bi bi-broadcast me-1 text-success"></i> GPS Ready
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GIANT EMERGENCY SOS SECTION -->
+<div id="sos-section" class="sos-btn-wrapper mb-4">
+    <button id="giant-sos-btn" class="sos-btn">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>SOS</span>
+    </button>
+    <div class="mt-2 text-center">
+        <span class="fw-bold text-danger fs-6 d-block"><i class="bi bi-hand-index-thumb me-1"></i> TAP FOR IMMEDIATE HELP</span>
+        <small class="text-muted">Captures live GPS & alerts Emergency Responders</small>
+    </div>
+</div>
+
+<!-- SOS Feedback Status Box -->
+<div id="sos-status-box" class="mb-4 d-none"></div>
+
+<!-- Active Disasters Banner Notice (if any) -->
+{% if active_disasters_count and active_disasters_count > 0 %}
+<div class="alert alert-warning border-2 border-warning shadow-sm rounded-4 mb-4 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="icon-box bg-warning text-dark me-3 my-0" style="width:40px; height:40px; font-size:1.2rem;">
+            <i class="bi bi-tsunami"></i>
+        </div>
+        <div>
+            <strong class="d-block text-dark mb-0">⚠ {{ active_disasters_count }} Active Disaster Warning(s)</strong>
+            <small class="text-dark">Heavy weather or urban risk reported in your area.</small>
+        </div>
+    </div>
+    <a href="/disasters" class="btn btn-sm btn-dark rounded-pill px-3 ms-2">View Alerts</a>
+</div>
+{% endif %}
+
+<!-- FIVE MAIN FEATURE CARDS -->
+<h6 class="fw-bold text-uppercase text-muted tracking-wider small mb-3">Core Safety Modules</h6>
+
+<div class="row g-3 mb-5">
+
+    <!-- 1. Accident Detection Assistance -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/accident" class="feature-card h-100">
+            <div class="d-flex align-items-center">
+                <div class="icon-box bg-icon-red me-3">
+                    <i class="bi bi-car-front-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Accident Detection</h6>
+                    <p class="text-muted small mb-0">Accelerometer impact sensor & emergency countdown.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- 2. Disaster Alerts -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/disasters" class="feature-card h-100">
+            <div class="d-flex align-items-center">
+                <div class="icon-box bg-icon-amber me-3">
+                    <i class="bi bi-water"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Disaster Alerts</h6>
+                    <p class="text-muted small mb-0">Verified city warnings, weather risks & map guidance.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- 3. Emergency Transport Assistance -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/transport" class="feature-card h-100">
+            <div class="d-flex align-items-center">
+                <div class="icon-box bg-icon-blue me-3">
+                    <i class="bi bi-ambulance"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Emergency Transport</h6>
+                    <p class="text-muted small mb-0">Request Ambulance, Fire, Police, or Rescue transport.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- 4. Guardian Journey -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/guardian" class="feature-card h-100">
+            <div class="d-flex align-items-center">
+                <div class="icon-box bg-icon-purple me-3">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Guardian Journey</h6>
+                    <p class="text-muted small mb-0">Live trip tracking link for family or guardian safety.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- 5. Nearby Safety Finder -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/safe-spots" class="feature-card h-100">
+            <div class="d-flex align-items-center">
+                <div class="icon-box bg-icon-emerald me-3">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Nearby Safety Finder</h6>
+                    <p class="text-muted small mb-0">Locate nearest Hospitals, Police Stations & Shelters.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<!-- Recent Activity / Status Check -->
+{% if my_recent_alerts or my_recent_requests or my_active_journey %}
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3 p-md-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-1 text-primary"></i> Your Active Requests & Journeys</h6>
+        
+        {% if my_active_journey %}
+        <div class="alert alert-info d-flex align-items-center justify-content-between rounded-3 mb-2">
+            <div>
+                <strong class="d-block mb-1"><i class="bi bi-signpost-split me-1"></i> Active Journey: {{ my_active_journey.destination }}</strong>
+                <small>Expected Arrival: {{ my_active_journey.expected_arrival }} | Code: <code>{{ my_active_journey.tracking_code }}</code></small>
+            </div>
+            <a href="/guardian" class="btn btn-sm btn-info text-white rounded-pill px-3">View</a>
+        </div>
+        {% endif %}
+
+        {% for req in my_recent_requests %}
+        <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+            <div>
+                <span class="badge bg-primary me-2">{{ req.request_type }}</span>
+                <small class="text-muted">{{ req.created_at.strftime("%I:%M %p") }}</small>
+            </div>
+            <div>
+                {% if req.status == 'Pending' %}<span class="badge bg-warning text-dark">Pending</span>{% endif %}
+                {% if req.status == 'Accepted' %}<span class="badge bg-info text-white">Accepted</span>{% endif %}
+                {% if req.status == 'On The Way' %}<span class="badge bg-primary">On The Way</span>{% endif %}
+                {% if req.status == 'Resolved' %}<span class="badge bg-success">Resolved</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('giant-sos-btn')?.addEventListener('click', async () => {
+    const statusBox = document.getElementById('sos-status-box');
+    statusBox.classList.remove('d-none');
+    statusBox.innerHTML = `
+        <div class="alert alert-danger shadow-sm border-2 border-danger d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-3" role="status"></div>
+            <div>
+                <h6 class="fw-bold mb-0">Capturing Location & Dispatching SOS...</h6>
+                <small>Please grant location permission if prompted.</small>
+            </div>
+        </div>
+    `;
+
+    const result = await window.SmartLocation.triggerSOS("Emergency Red SOS Button Pressed");
+
+    if (result.status === "success") {
+        statusBox.innerHTML = `
+            <div class="alert alert-success shadow-lg border-2 border-success rounded-4 p-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success fs-1 me-3"></i>
+                    <div>
+                        <h5 class="fw-bold text-success mb-1">🚨 EMERGENCY SOS DISPATCHED!</h5>
+                        <p class="mb-0 text-dark small">${result.message}</p>
+                        <small class="text-muted d-block mt-1">Alert ID: #${result.alert_id} | Status: <span class="badge bg-warning text-dark">Pending Dispatch</span></small>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        statusBox.innerHTML = `
+            <div class="alert alert-warning shadow-sm rounded-4 p-3">
+                <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Connection Note</h6>
+                <p class="mb-0 small">${result.message || 'Error triggering SOS alert.'}</p>
+            </div>
+        `;
+    }
+});
+</script>
+{% endblock %}

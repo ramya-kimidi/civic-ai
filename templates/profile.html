@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8 mb-5">
+
+        {% if user %}
+        <!-- USER PROFILE CARD HEADER -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-dark text-white p-4">
+            <div class="d-flex flex-column flex-sm-row align-items-center gap-3 text-center text-sm-start">
+                <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center fw-bold fs-2 shadow" style="width: 72px; height: 72px; min-width: 72px;">
+                    {{ user.full_name[:2].upper() }}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-sm-start gap-2 mb-1">
+                        <h4 class="fw-bold mb-0">{{ user.full_name }}</h4>
+                        <span class="badge {% if user.role == 'city_admin' %}bg-amber text-dark{% elif user.role == 'emergency_admin' %}bg-danger{% else %}bg-info text-dark{% endif %} rounded-pill fw-bold px-3 py-1">
+                            <i class="bi {% if user.role == 'city_admin' %}bi-building{% elif user.role == 'emergency_admin' %}bi-headset{% else %}bi-person-badge{% endif %} me-1"></i>
+                            {{ user.role.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                    <p class="text-white-50 mb-1 small"><i class="bi bi-at me-1"></i> {{ user.username }} &bull; <i class="bi bi-envelope me-1"></i> {{ user.email }}</p>
+                    <small class="text-white-50"><i class="bi bi-telephone me-1"></i> {{ user.phone or 'No phone added' }} &bull; Joined {{ user.created_at.strftime('%b %Y') if user.created_at else 'Recently' }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS OVERVIEW CARDS -->
+        <div class="row g-3 mb-4">
+            <div class="col-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white border-start border-4 border-danger">
+                    <small class="text-muted fw-semibold d-block text-truncate">SOS Alerts</small>
+                    <h3 class="fw-bold text-danger mb-0">{{ total_alerts|default(0) }}</h3>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white border-start border-4 border-primary">
+                    <small class="text-muted fw-semibold d-block text-truncate">Transport Reqs</small>
+                    <h3 class="fw-bold text-primary mb-0">{{ total_requests|default(0) }}</h3>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white border-start border-4 border-success">
+                    <small class="text-muted fw-semibold d-block text-truncate">Guardian Journey</small>
+                    <h3 class="fw-bold text-success mb-0">{% if active_journey %}Active{% else %}Inactive{% endif %}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACCESS ROLES / DASHBOARDS -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-grid-fill text-warning me-2"></i> Portal Access & Control</h6>
+            <div class="row g-2">
+                <div class="col-12 col-md-4">
+                    <a href="/user/dashboard" class="btn btn-outline-primary w-100 py-2 rounded-3 text-start fw-semibold d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-shield-check me-2"></i> Citizen Portal</span>
+                        <i class="bi bi-chevron-right small"></i>
+                    </a>
+                </div>
+                <div class="col-12 col-md-4">
+                    <a href="/city-admin/dashboard" class="btn btn-outline-warning w-100 py-2 rounded-3 text-start fw-semibold text-dark d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-building me-2"></i> City Admin Hub</span>
+                        <i class="bi bi-chevron-right small"></i>
+                    </a>
+                </div>
+                <div class="col-12 col-md-4">
+                    <a href="/emergency-admin/dashboard" class="btn btn-outline-danger w-100 py-2 rounded-3 text-start fw-semibold d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-headset me-2"></i> Emergency Command</span>
+                        <i class="bi bi-chevron-right small"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPDATE PROFILE & ROLE SWITCH FORM -->
+        <div class="row g-4 mb-4">
+            <!-- Edit Profile Form -->
+            <div class="col-12 col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 h-100">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square text-primary me-2"></i> Edit Account Details</h6>
+                    <form action="/profile/update" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" name="full_name" class="form-control bg-light" value="{{ user.full_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="text" name="phone" class="form-control bg-light" value="{{ user.phone or '' }}" placeholder="+1 (555) 019-2834">
+                        </div>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold btn-sm">
+                            <i class="bi bi-save me-1"></i> Update Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Role Switcher (For Demo & Testing) -->
+            <div class="col-12 col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 h-100">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-arrow-repeat text-warning me-2"></i> Switch User Role</h6>
+                    <p class="text-muted small mb-3">Seamlessly switch your active account role to test permissions across the platform.</p>
+                    
+                    <form action="/profile/switch-role" method="POST" class="d-flex flex-column gap-2">
+                        <button type="submit" name="role" value="citizen" class="btn {% if user.role == 'citizen' %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-3 text-start d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-person me-2"></i> Citizen Persona</span>
+                            {% if user.role == 'citizen' %}<span class="badge bg-white text-primary">Active</span>{% endif %}
+                        </button>
+
+                        <button type="submit" name="role" value="city_admin" class="btn {% if user.role == 'city_admin' %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} rounded-3 text-start d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-building me-2"></i> City Administrator</span>
+                            {% if user.role == 'city_admin' %}<span class="badge bg-dark text-white">Active</span>{% endif %}
+                        </button>
+
+                        <button type="submit" name="role" value="emergency_admin" class="btn {% if user.role == 'emergency_admin' %}btn-danger{% else %}btn-outline-secondary{% endif %} rounded-3 text-start d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-headset me-2"></i> Emergency Response Admin</span>
+                            {% if user.role == 'emergency_admin' %}<span class="badge bg-white text-danger">Active</span>{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIVE LOCATION SIMULATOR SECTION IN PROFILE -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pin-map-fill text-danger me-2"></i> Live Location & GPS Settings</h6>
+                <button type="button" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#locationModal">
+                    <i class="bi bi-sliders me-1"></i> Change Location
+                </button>
+            </div>
+            <p class="text-muted small mb-0">
+                Current Active Coordinates: <span id="profile-location-text" class="fw-semibold text-dark">Detecting...</span>.
+                Use the Live Location Switcher to test proximity-based emergency responses.
+            </p>
+        </div>
+
+        <!-- RECENT USER ALERTS & DISPATCH HISTORY -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-secondary me-2"></i> My Dispatches & History</h6>
+            {% if my_alerts or my_requests %}
+                <div class="list-group list-group-flush">
+                    {% for a in my_alerts %}
+                    <div class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge {% if a.alert_type == 'SOS' %}bg-danger{% else %}bg-warning text-dark{% endif %} me-2">{{ a.alert_type }} Alert</span>
+                                <span class="small text-muted">{{ a.created_at.strftime('%b %d, %I:%M %p') if a.created_at else '' }}</span>
+                                <p class="mb-0 small text-dark mt-1">{{ a.notes or 'No additional notes' }}</p>
+                            </div>
+                            <span class="badge bg-secondary">{{ a.status }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for r in my_requests %}
+                    <div class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary me-2">{{ r.request_type }} Request</span>
+                                <span class="small text-muted">{{ r.created_at.strftime('%b %d, %I:%M %p') if r.created_at else '' }}</span>
+                                <p class="mb-0 small text-dark mt-1">{{ r.description or 'Emergency transport' }}</p>
+                            </div>
+                            <span class="badge bg-info text-white">{{ r.status }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0 p-2 text-center bg-light rounded-3">No emergency alerts or transport requests recorded for your account yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- LOGOUT BUTTON -->
+        <div class="text-center mt-4">
+            <a href="/logout" onclick="handleLogout(event)" class="btn btn-outline-danger rounded-pill px-4 fw-bold">
+                <i class="bi bi-box-arrow-right me-1"></i> Log Out from SmartCivic
+            </a>
+        </div>
+
+        {% else %}
+        <!-- GUEST PROFILE CARD (NOT LOGGED IN) -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden text-center p-4 p-md-5 mb-4">
+            <div class="mb-3">
+                <div class="rounded-circle bg-light text-primary d-inline-flex align-items-center justify-content-center fs-1 shadow-sm mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-bounding-box"></i>
+                </div>
+                <h4 class="fw-bold">Guest User Profile</h4>
+                <p class="text-muted small">Log in or create a SmartCivic account to access personalized emergency dispatches, guardian tracking, and city management.</p>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-center mb-4">
+                <a href="/login" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold shadow-sm">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Log In
+                </a>
+                <a href="/register" class="btn btn-outline-dark btn-lg rounded-pill px-4 fw-bold">
+                    <i class="bi bi-person-plus me-1"></i> Register New Account
+                </a>
+            </div>
+
+            <!-- DEMO LOGIN BUTTONS -->
+            <hr class="my-4">
+            <h6 class="fw-bold text-uppercase text-muted small mb-3">Instant One-Click Demo Logins</h6>
+            <div class="row g-2 text-start">
+                <div class="col-12 col-md-4">
+                    <form action="/login" method="POST">
+                        <input type="hidden" name="email_or_username" value="citizen">
+                        <input type="hidden" name="password" value="citizen123">
+                        <button type="submit" class="btn btn-outline-primary w-100 rounded-3 p-2 text-start">
+                            <strong class="d-block small"><i class="bi bi-person me-1"></i> Citizen Account</strong>
+                            <span class="text-muted" style="font-size:0.75rem;">Username: citizen</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-12 col-md-4">
+                    <form action="/login" method="POST">
+                        <input type="hidden" name="email_or_username" value="cityadmin">
+                        <input type="hidden" name="password" value="admin123">
+                        <button type="submit" class="btn btn-outline-warning text-dark w-100 rounded-3 p-2 text-start">
+                            <strong class="d-block small"><i class="bi bi-building me-1"></i> City Admin</strong>
+                            <span class="text-muted" style="font-size:0.75rem;">Username: cityadmin</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-12 col-md-4">
+                    <form action="/login" method="POST">
+                        <input type="hidden" name="email_or_username" value="emergencyadmin">
+                        <input type="hidden" name="password" value="admin123">
+                        <button type="submit" class="btn btn-outline-danger w-100 rounded-3 p-2 text-start">
+                            <strong class="d-block small"><i class="bi bi-headset me-1"></i> Emergency Dispatch</strong>
+                            <span class="text-muted" style="font-size:0.75rem;">Username: emergencyadmin</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    if (window.SmartLocation) {
+        const loc = await SmartLocation.getCurrentPosition();
+        const el = document.getElementById("profile-location-text");
+        if (el) {
+            el.innerHTML = `<strong>${loc.label}</strong> (Lat: ${loc.latitude.toFixed(4)}, Lng: ${loc.longitude.toFixed(4)})`;
+        }
+    }
+});
+</script>
+{% endblock %}

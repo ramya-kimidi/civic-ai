@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}SmartCivic - Smart Urban Safety & Emergency Assistance Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center my-3">
+    <div class="col-12 col-md-10 col-lg-8">
+
+        <!-- Hero Card -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 bg-gradient text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);">
+            <div class="card-body p-4 p-md-5">
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-3">
+                    <i class="bi bi-shield-fill-check me-1"></i> SMART URBAN SAFETY PLATFORM
+                </span>
+                <h1 class="display-6 fw-bold mb-2">SmartCivic</h1>
+                <p class="lead text-white-50 mb-4" style="font-size:1.1rem;">"Smart Urban Safety & Emergency Assistance Platform"</p>
+
+                {% if user %}
+                    <div class="p-3 bg-white bg-opacity-10 rounded-3 mb-4 d-inline-block text-start">
+                        <small class="text-white-50 d-block">Logged in as:</small>
+                        <strong class="fs-5">{{ user.full_name }}</strong>
+                        <span class="badge bg-info text-dark ms-2">{{ user.role.replace('_', ' ').title() }}</span>
+                    </div>
+
+                    <div class="d-grid gap-2 col-12 col-sm-8 mx-auto">
+                        {% if user.role == 'city_admin' %}
+                            <a href="/city-admin/dashboard" class="btn btn-warning btn-lg rounded-pill fw-bold">
+                                <i class="bi bi-building me-1"></i> Go to City Admin Dashboard
+                            </a>
+                        {% elif user.role == 'emergency_admin' %}
+                            <a href="/emergency-admin/dashboard" class="btn btn-danger btn-lg rounded-pill fw-bold">
+                                <i class="bi bi-headset me-1"></i> Go to Emergency Admin Command
+                            </a>
+                        {% else %}
+                            <a href="/user/dashboard" class="btn btn-warning btn-lg rounded-pill fw-bold">
+                                <i class="bi bi-shield-check me-1"></i> Open Citizen Safety Dashboard
+                            </a>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="d-grid gap-2 d-sm-flex justify-content-center mb-3">
+                        <a href="/user/dashboard" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold shadow-sm">
+                            <i class="bi bi-phone-vibrate me-1"></i> Enter Citizen Portal
+                        </a>
+                        <a href="/login" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Login / Role Access
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Role Quick Access Cards -->
+        <h6 class="fw-bold text-uppercase text-muted tracking-wider small mb-3">Explore SmartCivic Roles</h6>
+        <div class="row g-3 mb-5 text-start">
+            <div class="col-12 col-md-4">
+                <a href="/user/dashboard" class="feature-card h-100">
+                    <div class="icon-box bg-icon-emerald mb-2">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Citizen Dashboard</h6>
+                    <p class="text-muted small mb-0">Red SOS, Accident detection, Disaster alerts, Emergency transport & Guardian tracking.</p>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <a href="/city-admin/dashboard" class="feature-card h-100">
+                    <div class="icon-box bg-icon-amber mb-2">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">City Administrator</h6>
+                    <p class="text-muted small mb-0">Publish official disaster hazard warnings & manage verified urban safe spots.</p>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <a href="/emergency-admin/dashboard" class="feature-card h-100">
+                    <div class="icon-box bg-icon-red mb-2">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Emergency Admin</h6>
+                    <p class="text-muted small mb-0">Real-time incident command, SOS dispatch, transport tracking & status updates.</p>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

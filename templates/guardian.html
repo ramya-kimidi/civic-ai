@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Guardian Journey - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+
+        <!-- Header -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4 text-center">
+                <div class="icon-box bg-icon-purple mx-auto mb-2">
+                    <i class="bi bi-shield-lock-fill fs-2"></i>
+                </div>
+                <h4 class="fw-bold">Guardian Journey</h4>
+                <p class="text-muted small mb-0">Share a live tracking link with trusted guardians during late night or solo travel.</p>
+            </div>
+        </div>
+
+        <!-- SETUP JOURNEY CARD -->
+        <div id="journey-setup-card" class="card border-0 shadow-sm rounded-4 mb-4 {% if active_journey %}d-none{% endif %}">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-geo-fill text-primary me-1"></i> Setup Trip Details</h6>
+
+                <form id="guardian-start-form">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Traveller Name</label>
+                        <input type="text" id="traveller_name" class="form-control bg-light" value="{{ user.full_name if user else '' }}" placeholder="Your Full Name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Guardian Name</label>
+                        <input type="text" id="guardian_name" class="form-control bg-light" placeholder="e.g. David (Father / Friend)" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Guardian Contact / Phone</label>
+                        <input type="tel" id="guardian_contact" class="form-control bg-light" placeholder="+1 (555) 019-8877" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Destination Address / Location</label>
+                        <input type="text" id="destination" class="form-control bg-light" placeholder="e.g. City Center Plaza, Block B" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Expected Arrival Time</label>
+                        <input type="time" id="expected_arrival" class="form-control bg-light" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-purple text-white w-100 py-3 rounded-3 fw-bold shadow-sm" style="background-color: #8b5cf6;">
+                        <i class="bi bi-shield-check me-1"></i> START GUARDIAN JOURNEY
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ACTIVE JOURNEY CARD (Shown when journey is running) -->
+        <div id="journey-active-card" class="card border-0 shadow-sm rounded-4 mb-4 {% if not active_journey %}d-none{% endif %}">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="badge bg-success px-3 py-2 rounded-pill animate-pulse">
+                        <i class="bi bi-broadcast me-1"></i> JOURNEY ACTIVE
+                    </span>
+                    <span class="text-muted small">Tracking Code: <strong id="active-code-text">{{ active_journey.tracking_code if active_journey else '' }}</strong></span>
+                </div>
+
+                <h5 class="fw-bold mb-1">Heading to: <span id="active-dest-text" class="text-primary">{{ active_journey.destination if active_journey else '' }}</span></h5>
+                <p class="text-muted small mb-3">Periodic location updates sent automatically every 15s.</p>
+
+                <!-- Shareable Link Box -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small text-muted">Guardian Tracking Link</label>
+                    <div class="input-group">
+                        <input type="text" id="share-link-input" class="form-control bg-light text-primary fw-semibold" readonly value="{% if active_journey %}/guardian/track/{{ active_journey.tracking_code }}{% endif %}">
+                        <button class="btn btn-primary" onclick="copyShareLink()">
+                            <i class="bi bi-clipboard me-1"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 mb-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <small class="text-muted d-block">Last GPS Heartbeat</small>
+                        <strong id="last-gps-time" class="text-dark">Just Now</strong>
+                    </div>
+                    <i class="bi bi-geo-alt-fill text-success fs-3"></i>
+                </div>
+
+                <button id="reach-safely-btn" class="btn btn-success w-100 py-3 rounded-3 fw-bold shadow-sm">
+                    <i class="bi bi-check-circle-fill me-1"></i> I REACHED SAFELY
+                </button>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="card border-0 bg-light shadow-sm rounded-4 mb-5">
+            <div class="card-body p-3">
+                <small class="text-muted d-block" style="font-size:0.775rem;">
+                    <i class="bi bi-info-circle me-1"></i> <strong>Note:</strong> Keep this page open in your mobile browser while traveling to ensure continuous location heartbeats.
+                </small>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/guardian.js"></script>
+{% if active_journey %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    activeTrackingCode = "{{ active_journey.tracking_code }}";
+    startPeriodicLocationUpdates("{{ active_journey.tracking_code }}");
+});
+</script>
+{% endif %}
+{% endblock %}

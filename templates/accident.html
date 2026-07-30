@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Accident Detection - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4 text-center">
+                <div class="icon-box bg-icon-red mx-auto mb-2">
+                    <i class="bi bi-car-front-fill fs-2"></i>
+                </div>
+                <h4 class="fw-bold">Accident Detection Assistance</h4>
+                <p class="text-muted small mb-3">Uses mobile motion sensors to monitor sudden physical impacts or decelerations.</p>
+
+                <!-- Status Badge -->
+                <div class="mb-4">
+                    <span id="monitoring-status" class="badge bg-secondary p-2">
+                        <i class="bi bi-pause-circle me-1"></i> Inactive
+                    </span>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="d-grid gap-2">
+                    <button id="start-detection-btn" class="btn btn-primary py-2 rounded-3 fw-bold shadow-sm">
+                        <i class="bi bi-play-circle me-1"></i> Start Accident Detection
+                    </button>
+                    
+                    <button id="simulate-accident-btn" class="btn btn-outline-danger py-2 rounded-3 fw-semibold">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Simulate Accident (Demo Test)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Container -->
+        <div id="accident-result" class="mb-4"></div>
+
+        <!-- Prototype Disclaimer Box -->
+        <div class="card border-0 bg-light shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3">
+                <h6 class="fw-bold text-dark mb-1" style="font-size:0.85rem;">
+                    <i class="bi bi-info-circle-fill text-info me-1"></i> Prototype Disclaimer
+                </h6>
+                <p class="text-secondary mb-0" style="font-size:0.775rem;">
+                    This feature provides <strong>possible accident detection</strong> based on mobile web sensor APIs. Browser sensor precision varies by hardware. It is not safety-certified or medically guaranteed. Always dial primary local emergency services directly when able.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- COUNTDOWN MODAL -->
+<div class="modal fade" id="accidentModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+            <div class="modal-body">
+                <div class="text-danger mb-3">
+                    <i class="bi bi-exclamation-octagon-fill display-1 animate-pulse"></i>
+                </div>
+                <h4 class="fw-bold text-danger mb-1">POSSIBLE ACCIDENT DETECTED!</h4>
+                <p id="accident-reason" class="text-muted small mb-3">Sudden impact motion detected by accelerometer.</p>
+
+                <div class="my-4">
+                    <div class="display-3 fw-bold text-dark" id="countdown-timer">10</div>
+                    <small class="text-uppercase text-muted fw-bold">Seconds remaining before auto-dispatch</small>
+                </div>
+
+                <h5 class="fw-bold mb-4">Are you safe?</h5>
+
+                <div class="d-grid gap-2 d-sm-flex justify-content-center">
+                    <button id="im-safe-btn" class="btn btn-success btn-lg px-4 rounded-pill fw-bold">
+                        <i class="bi bi-check-lg me-1"></i> I'M SAFE
+                    </button>
+                    <button id="get-help-btn" class="btn btn-danger btn-lg px-4 rounded-pill fw-bold">
+                        <i class="bi bi-telephone-fill me-1"></i> GET HELP NOW
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/accident.js"></script>
+{% endblock %}

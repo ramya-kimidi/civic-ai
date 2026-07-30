@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}City Admin Hub - SmartCivic{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar / Overview -->
+    <div class="col-12 col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 bg-dark text-white p-3 mb-3">
+            <div class="card-body">
+                <span class="badge bg-warning text-dark mb-2 fw-bold"><i class="bi bi-building me-1"></i> CITY ADMINISTRATOR</span>
+                <h4 class="fw-bold mb-1">Urban Disaster Hub</h4>
+                <p class="text-white-50 small mb-0">Publish official hazard advisories & manage safe spots across city sectors.</p>
+            </div>
+        </div>
+
+        <!-- Add Safe Spot Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-success me-1"></i> Register New Safe Spot</h6>
+                <form action="/api/safe-spots" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Spot Name</label>
+                        <input type="text" name="name" class="form-control form-control-sm bg-light" placeholder="e.g. Eastside General Clinic" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Type</label>
+                        <select name="spot_type" class="form-select form-select-sm bg-light">
+                            <option value="Hospital">Hospital</option>
+                            <option value="Police Station">Police Station</option>
+                            <option value="Fire Station">Fire Station</option>
+                            <option value="Shelter">Shelter</option>
+                            <option value="Pharmacy">Pharmacy</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Latitude</label>
+                            <input type="number" step="any" name="latitude" class="form-control form-control-sm bg-light" placeholder="28.6139" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Longitude</label>
+                            <input type="number" step="any" name="longitude" class="form-control form-control-sm bg-light" placeholder="77.2090" required>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Address</label>
+                        <input type="text" name="address" class="form-control form-control-sm bg-light" placeholder="Sector 12, Main Rd" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Phone Contact</label>
+                        <input type="text" name="phone" class="form-control form-control-sm bg-light" placeholder="+1 (800) 555-0100">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm w-100 rounded-pill fw-bold">
+                        <i class="bi bi-plus-circle me-1"></i> Add Safe Spot
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content: Issue Disaster Warning -->
+    <div class="col-12 col-lg-8 mb-5">
+        
+        <!-- Create Disaster Warning Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> Issue Official Disaster Advisory</h5>
+
+                <form action="/api/disasters" method="POST">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Disaster Type</label>
+                            <select name="disaster_type" class="form-select bg-light" required>
+                                <option value="Flood">🌊 Flood</option>
+                                <option value="Fire">🔥 Fire</option>
+                                <option value="Cyclone">🌪 Cyclone</option>
+                                <option value="Heavy Rainfall">🌧 Heavy Rainfall</option>
+                                <option value="Building Collapse">🏢 Building Collapse</option>
+                                <option value="Other">⚠ Other Hazard</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Severity Level</label>
+                            <select name="severity" class="form-select bg-light" required>
+                                <option value="Low">Low (Informational)</option>
+                                <option value="Medium" selected>Medium (Caution)</option>
+                                <option value="High">High (Dangerous)</option>
+                                <option value="Critical">Critical (Immediate Evacuation)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-8">
+                            <label class="form-label fw-semibold">Warning Title</label>
+                            <input type="text" name="title" class="form-control bg-light" placeholder="e.g. Heavy Flash Flooding Warning" required>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">Target Area / Sector</label>
+                            <input type="text" name="area" class="form-control bg-light" placeholder="e.g. ABC Colony & Lowlands" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Advisory Description / Guidance</label>
+                            <textarea name="description" class="form-control bg-light" rows="3" placeholder="Provide actionable citizen guidance e.g. Heavy flooding reported. Avoid underground passes and stay indoors." required></textarea>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Center Latitude</label>
+                            <input type="number" step="any" name="latitude" id="disaster_lat" class="form-control bg-light" value="28.6139" required>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Center Longitude</label>
+                            <input type="number" step="any" name="longitude" id="disaster_lng" class="form-control bg-light" value="77.2090" required>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-danger w-100 py-2.5 rounded-3 fw-bold shadow-sm">
+                            <i class="bi bi-broadcast me-1"></i> PUBLISH DISASTER WARNING
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Active Warnings List -->
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-list-task me-1"></i> Existing Disaster Advisories</h6>
+                
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type & Title</th>
+                                <th>Area</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in disasters %}
+                            <tr>
+                                <td>
+                                    <strong class="d-block">{{ d.title }}</strong>
+                                    <small class="text-muted">{{ d.disaster_type }}</small>
+                                </td>
+                                <td><small>{{ d.area }}</small></td>
+                                <td>
+                                    <span class="badge {% if d.severity == 'Critical' %}bg-danger{% elif d.severity == 'High' %}bg-warning text-dark{% else %}bg-info text-white{% endif %}">
+                                        {{ d.severity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if d.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Deactivated</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="toggleDisaster({{ d.id }})">
+                                        Toggle Active
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function toggleDisaster(id) {
+    const res = await fetch(`/api/disasters/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'success') {
+        window.location.reload();
+    }
+}
+</script>
+{% endblock %}
